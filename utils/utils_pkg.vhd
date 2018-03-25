@@ -9,22 +9,33 @@ use IEEE.STD_LOGIC_1164.ALL;
 --
 package utils_pkg is
 
-	component pulse_gen is
+	component debouncer is
 		generic(
-			DELAY	: integer  -- in clock cycles
+			DELAY	: integer; --in us
+			CLK_FREQ: integer --in Hz
 		);
+	
 		port(
 			clk	: in std_logic;
 			rst	: in std_logic;
 			input	: in std_logic;
-			outPulse: out std_logic
+			output	: out std_logic --debounced input
 		);
-	end component pulse_gen;
+	end component debouncer;
+--
+--------------------------------------------------------------------------------
+--
+component edge_detector is
+	port(
+		clk	: in std_logic;
+		input	: in std_logic;
+		output	: out std_logic
+	);
+end component edge_detector;
 --
 --------------------------------------------------------------------------------
 --
 	component seven_seg_display is
-
 		generic(
 			CLK_FREQ : integer
 		);
@@ -42,7 +53,6 @@ package utils_pkg is
 			seg   : out std_logic_vector(7 downto 0);
 			anode : out std_logic_vector(7 downto 0)
 		);
-
 	end component seven_seg_display;
 --
 --------------------------------------------------------------------------------

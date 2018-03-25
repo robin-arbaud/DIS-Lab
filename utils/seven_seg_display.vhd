@@ -41,7 +41,7 @@ architecture behavioral of seven_seg_display is
 
 	signal bin : std_logic_vector(3 downto 0) := "0000";
 	signal currentDisplay : integer range 0 to 7 := 0;
-	constant DURATION : integer := CLK_FREQ/250; -- Switch display every 4 ms
+	constant DURATION : integer := CLK_FREQ/333; -- Switch display every 3 ms
 	signal timer : integer range 0 to DURATION := 0;
 
 begin
@@ -116,7 +116,7 @@ begin
 				when "1111"=> seg <="01110001";  -- 'F'
 				when others=> seg <="11111111"; -- nothing
 			end case;
-		else seg <= "11111111";
+		else seg <= "11111111"; -- display is not used
 		end if;
 
 	end process bin2seg;
