@@ -4,11 +4,11 @@
 --
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+
+package utils_pkg is
 --
 --------------------------------------------------------------------------------
 --
-package utils_pkg is
-
 	component debouncer is
 		generic(
 			DELAY	: integer; --in us
@@ -25,13 +25,13 @@ package utils_pkg is
 --
 --------------------------------------------------------------------------------
 --
-component edge_detector is
-	port(
-		clk	: in std_logic;
-		input	: in std_logic;
-		output	: out std_logic
-	);
-end component edge_detector;
+	component edge_detector is
+		port(
+			clk	: in std_logic;
+			input	: in std_logic;
+			output	: out std_logic
+		);
+	end component edge_detector;
 --
 --------------------------------------------------------------------------------
 --
@@ -87,5 +87,24 @@ end component edge_detector;
 			tx    : out std_logic
 		);
 	end component uart_tx;
+
+--
+-------------------------------------------------------------------------------- --
+	component fifo_buffer is
+		Generic (
+			constant DATA_WIDTH	: integer;
+			constant FIFO_DEPTH	: integer
+		);
+		Port ( 
+			clk	: in  std_logic;
+			rst	: in  std_logic;
+			write	: in  std_logic;
+			dataIn	: in  std_logic_vector (DATA_WIDTH -1 downto 0);
+			read	: in  std_logic;
+			dataOut	: out std_logic_vector (DATA_WIDTH -1 downto 0);
+			empty	: out std_logic;
+			full	: out std_logic
+		);
+	end component fifo_buffer;
 
 end utils_pkg;
