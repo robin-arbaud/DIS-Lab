@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 --
 library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_1164.all;
 
 package utils_pkg is
 --
@@ -91,17 +91,19 @@ package utils_pkg is
 --
 -------------------------------------------------------------------------------- --
 	component fifo_buffer is
-		Generic (
-			constant DATA_WIDTH	: integer;
-			constant FIFO_DEPTH	: integer
+		generic (
+			constant DATA_BASE_WIDTH: integer; --storage unit length
+			constant DATA_IN_WIDTH	: integer; --number of storage units stored on write
+			constant DATA_OUT_WIDTH	: integer; --number of storage units loaded on read
+			constant FIFO_DEPTH	: integer  --number of available storage units
 		);
-		Port ( 
+		port ( 
 			clk	: in  std_logic;
 			rst	: in  std_logic;
 			write	: in  std_logic;
-			dataIn	: in  std_logic_vector (DATA_WIDTH -1 downto 0);
+			dataIn	: in  std_logic_vector (DATA_IN_WIDTH *DATA_BASE_WIDTH -1 downto 0);
 			read	: in  std_logic;
-			dataOut	: out std_logic_vector (DATA_WIDTH -1 downto 0);
+			dataOut	: out std_logic_vector (DATA_OUT_WIDTH*DATA_BASE_WIDTH -1 downto 0);
 			empty	: out std_logic;
 			full	: out std_logic
 		);

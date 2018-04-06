@@ -15,16 +15,18 @@ architecture behav of fifo_tb is
 	component fifo is
 
 		generic(
-			DATA_WIDTH: integer;
-			FIFO_DEPTH: integer
+			DATA_BASE_WIDTH	: integer;
+			DATA_IN_WIDTH	: integer;
+			DATA_OUT_WIDTH	: integer;
+			FIFO_DEPTH	: integer
 		);
 		port(
-			clk	: in std_logic;
-			rst	: in std_logic;
-			write	: in std_logic;
-			dataIn	: in std_logic_vector (DATA_WIDTH -1 downto 0);
-			read	: in std_logic;
-			dataOut	: out std_logic_vector (DATA_WIDTH -1 downto 0);
+			clk	: in  std_logic;
+			rst	: in  std_logic;
+			write	: in  std_logic;
+			dataIn	: in  std_logic_vector (DATA_IN_WIDTH *DATA_BASE_WIDTH -1 downto 0);
+			read	: in  std_logic;
+			dataOut	: out std_logic_vector (DATA_OUT_WIDTH*DATA_BASE_WIDTH -1 downto 0);
 			empty	: out std_logic;
 			full	: out std_logic
 		);
@@ -43,8 +45,10 @@ begin
 
 	dut: fifo
 	generic map (
-		DATA_WIDTH => 8,
-		FIFO_DEPTH => 8
+		DATA_BASE_WIDTH	=> 8,
+		DATA_IN_WIDTH	=> 1,
+		DATA_OUT_WIDTH	=> 1,
+		FIFO_DEPTH	=> 8
 	)
 	port map (
 		clk => clk,
