@@ -1,3 +1,5 @@
 *.swo
 *.swp
 *.vcd
+vivado*
+.Xil*
