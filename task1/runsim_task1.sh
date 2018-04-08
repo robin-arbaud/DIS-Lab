@@ -10,7 +10,7 @@ ghdl -a ../utils/uart_tx.vhd
 ghdl -a ../utils/fifo/fifo.vhd
 
 ghdl -a hdl/controller.vhd
-ghdl -a hdl/top_noRNG.vhd
+ghdl -a hdl/top_noRNG_sim.vhd
 ghdl -a hdl/tb_noRNG.vhd
 
 ghdl -e tb_noRNG

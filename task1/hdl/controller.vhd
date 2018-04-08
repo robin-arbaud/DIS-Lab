@@ -58,7 +58,7 @@ architecture behav of controller is
 		IDDLE,
 		PENDING
 	);
-	signal state_mode	: type_mode := PROD;
+	signal state_mode	: type_mode  := PROD;
 	signal state_state	: type_state := IDDLE;
 
 	signal output_OK	: std_logic := '0';
@@ -70,7 +70,8 @@ architecture behav of controller is
 	signal fifo_full	: std_logic := '0';
 
 	signal rng_data_swap	: std_logic_vector(15 downto 0);
-	signal issueData	: std_logic_vector(7  downto 0);
+	signal issue_data	: std_logic_vector(7  downto 0);
+	signal uart_send	: std_logic := '0';
 
 	signal modeClean	: std_logic := '0';
 	signal requestClean	: std_logic := '0';
@@ -113,7 +114,7 @@ begin
 			DATA_BASE_WIDTH	=> 8,
 			DATA_IN_WIDTH	=> 2,
 			DATA_OUT_WIDTH	=> 1,
-			FIFO_DEPTH	=> 8
+			FIFO_DEPTH	=> 16
 		)
 		port map(
 			clk	=> clk,
@@ -121,23 +122,33 @@ begin
 			write	=> dataOK,
 			dataIn	=> rng_data_swap,
 			read	=> fifo_read_req,
-			dataOut	=> issueData,
+			dataOut	=> issue_data,
 			empty	=> fifo_empty,
 			full	=> fifo_full
 		);
 
 	rng_data_swap <= rngData(7 downto 0) & rngData(15 downto 8);
 
-	fifo_read_req <= '1' when (fifo_empty = '0' and uartRdy = '1') and (output_ok = '0' and state_state = PENDING) else '0';
 
 	process (clk) -- Set the output as OK at falling edge, since the buffer
 	begin         -- is synchronized with the falling edge.
-		if falling_edge(clk) then output_ok <= fifo_read_req;
+		if falling_edge(clk) then
+			output_ok <= fifo_read_req;
+		end if;
+
+		if rising_edge(clk) then
+			if (fifo_empty = '0' and uartRdy = '1') and (output_ok = '0' and state_state = PENDING) and uart_send = '0' then
+				fifo_read_req <= '1';
+			else
+				fifo_read_req <= '0';
+			end if;
 		end if;
 	end process;
 --
 -------------------------------------------------------------------------------
 -- Output interfaces
+	uartSnd <= uart_send;
+
 	outIf : process (clk)
 	begin	
 		if state_state = IDDLE then
@@ -148,8 +159,8 @@ begin
 			if output_OK = '1' then
 
 				-- UART
-				uartData <= issueData;
-				uartSnd	<= '1';
+				uartData   <= issue_data;
+				uart_send  <= '1';
 				sent_bytes <= sent_bytes +1;
 
 				-- 7 segments display
@@ -157,14 +168,14 @@ begin
 				when PROD =>
 					--display 4 LSBs
 					case sent_bytes is
-					when 15 =>	data0 <= issueData(3 downto 0);
-							data1 <= issueData(7 downto 4);
-					when 14 =>	data2 <= issuedata(3 downto 0);
-							data3 <= issueData(7 downto 4);
-					when 13 =>	data4 <= issuedata(3 downto 0);
-							data5 <= issueData(7 downto 4);
-					when 12 =>	data6 <= issuedata(3 downto 0);
-							data7 <= issueData(7 downto 4);
+					when 15 =>	data0 <= issue_data(3 downto 0);
+							data1 <= issue_data(7 downto 4);
+					when 14 =>	data2 <= issue_data(3 downto 0);
+							data3 <= issue_data(7 downto 4);
+					when 13 =>	data4 <= issue_data(3 downto 0);
+							data5 <= issue_data(7 downto 4);
+					when 12 =>	data6 <= issue_data(3 downto 0);
+							data7 <= issue_data(7 downto 4);
 					when others =>	NULL;
 					end case;
 
@@ -176,7 +187,7 @@ begin
 				end case;
 
 			else
-				uartSnd <= '0';
+				uart_send <= '0';
 			end if;
 		end if;
 	end process outIf;

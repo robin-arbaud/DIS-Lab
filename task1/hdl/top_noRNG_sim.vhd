@@ -29,13 +29,12 @@ end top_noRNG;
 architecture behav of top_noRNG is
 
 	constant CLK_FREQ	: integer := 100E6;
-	constant BAUDRATE	: integer := 9600;
+	constant BAUDRATE	: integer := 38400;
 
 	-- Controller <--> RNG
 	--signal rng_data		: std_logic_vector(15 downto 0);
 	--signal data_ok		: std_logic;
 	--signal req_data		: std_logic;
-	--signal rng_data_ok_debounced	: std_logic;
 
 	-- Controller <--> UART
 	signal uart_rdy		: std_logic;
@@ -65,7 +64,7 @@ begin
 			mode	=> MODE,
 			request	=> REQ,
 			rngData	=> RNG_rng_data,
-			dataOK	=> rng_data_ok,
+			dataOK	=> RNG_data_ok,
 			reqData	=> RNG_req_data,
 			uartRdy	=> uart_rdy,
 			uartSnd	=> uart_snd,
@@ -81,17 +80,6 @@ begin
 			data7	=> seg_data7
 		);
 
---	deb : entity work.debouncer
---		generic map(
---			CLK_FREQ=> CLK_FREQ,
---			DELAY	=> 20000
---		)
---		port map(
---			clk	=> CLK,
---			rst	=> RST,
---			input	=> RNG_data_ok,
---			output	=> rng_data_ok_debounced
---		);
 
 	uart_trans : entity work.uart_tx
 		generic map(
