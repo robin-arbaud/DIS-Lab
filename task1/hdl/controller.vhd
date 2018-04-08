@@ -54,7 +54,12 @@ architecture behav of controller is
 		PROD,
 		TEST
 	);
+	type type_state is (
+		IDDLE,
+		PENDING
+	);
 	signal state_mode	: type_mode := PROD;
+	signal state_state	: type_state := IDDLE;
 
 	signal output_OK	: std_logic := '0';
 	signal fifo_read_req	: std_logic := '0';
@@ -64,7 +69,8 @@ architecture behav of controller is
 	signal fifo_empty	: std_logic := '1';
 	signal fifo_full	: std_logic := '0';
 
-	signal issueData	: std_logic_vector(7 downto 0);
+	signal rng_data_swap	: std_logic_vector(15 downto 0);
+	signal issueData	: std_logic_vector(7  downto 0);
 
 	signal modeClean	: std_logic := '0';
 	signal requestClean	: std_logic := '0';
@@ -78,26 +84,27 @@ begin
 	ctrl : process (clk, rst)
 	begin
 		if rst = '1' then
+			state_state	<= IDDLE;
 
 		elsif rising_edge(clk) then
 
-			if requested_bytes = 0 and requestPulse = '1' then
+			if state_state = IDDLE and requestPulse = '1' then
 				case state_mode is
 				when PROD => requested_bytes <= 16;
 				when TEST => requested_bytes <= 16E5;
 				end case;
 
-				sent_bytes <= 0;
+				state_state <= PENDING;
 
 			elsif sent_bytes >= requested_bytes then
-				requested_bytes <= 0;
+				state_state <= IDDLE;
 			end if;
 		end if;
 	end process ctrl;
 
 
 	state_mode <= PROD when (modeClean = '0') else TEST;
-	reqData <= '1' when requested_bytes >= sent_bytes else '0';
+	reqData <= '1' when (fifo_full = '0') and (state_state = PENDING) else '0';
 --
 -------------------------------------------------------------------------------
 -- FIFO instance and control signals
@@ -112,14 +119,16 @@ begin
 			clk	=> clk,
 			rst	=> rst,
 			write	=> dataOK,
-			dataIn	=> rngData,
+			dataIn	=> rng_data_swap,
 			read	=> fifo_read_req,
 			dataOut	=> issueData,
 			empty	=> fifo_empty,
 			full	=> fifo_full
 		);
 
-	fifo_read_req <= '1' when (fifo_empty = '0') and (sent_bytes < requested_bytes) else '0';
+	rng_data_swap <= rngData(7 downto 0) & rngData(15 downto 8);
+
+	fifo_read_req <= '1' when (fifo_empty = '0' and uartRdy = '1') and (output_ok = '0' and state_state = PENDING) else '0';
 
 	process (clk) -- Set the output as OK at falling edge, since the buffer
 	begin         -- is synchronized with the falling edge.
@@ -130,36 +139,45 @@ begin
 -------------------------------------------------------------------------------
 -- Output interfaces
 	outIf : process (clk)
-	begin
-		if rising_edge(clk) and output_OK = '1' then
+	begin	
+		if state_state = IDDLE then
+			sent_bytes <= 0;
 
-			-- UART
-			uartData <= issueData;
-			uartSnd	<= '0';
-			sent_bytes <= sent_bytes +1;
+		elsif rising_edge(clk) then
 
-			-- 7 segments display
-			case state_mode is
-			when PROD =>
-				--display 4 LSBs
-				case sent_bytes is
-				when 15 =>	data0 <= issueData(3 downto 0);
-						data1 <= issueData(7 downto 4);
-				when 14 =>	data2 <= issuedata(3 downto 0);
-						data3 <= issueData(7 downto 4);
-				when 13 =>	data4 <= issuedata(3 downto 0);
-						data5 <= issueData(7 downto 4);
-				when 12 =>	data6 <= issuedata(3 downto 0);
-						data7 <= issueData(7 downto 4);
-				when others =>	NULL;
+			if output_OK = '1' then
+
+				-- UART
+				uartData <= issueData;
+				uartSnd	<= '1';
+				sent_bytes <= sent_bytes +1;
+
+				-- 7 segments display
+				case state_mode is
+				when PROD =>
+					--display 4 LSBs
+					case sent_bytes is
+					when 15 =>	data0 <= issueData(3 downto 0);
+							data1 <= issueData(7 downto 4);
+					when 14 =>	data2 <= issuedata(3 downto 0);
+							data3 <= issueData(7 downto 4);
+					when 13 =>	data4 <= issuedata(3 downto 0);
+							data5 <= issueData(7 downto 4);
+					when 12 =>	data6 <= issuedata(3 downto 0);
+							data7 <= issueData(7 downto 4);
+					when others =>	NULL;
+					end case;
+
+					useMask <= "11111111";
+					
+				when TEST =>
+					--7 segments display unused
+					useMask	<= "00000000";
 				end case;
 
-				useMask <= "11111111";
-				
-			when TEST =>
-				--7 segments display unused
-				useMask	<= "00000000";
-			end case;
+			else
+				uartSnd <= '0';
+			end if;
 		end if;
 	end process outIf;
 --

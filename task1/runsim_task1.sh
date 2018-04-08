@@ -10,9 +10,10 @@ ghdl -a ../utils/uart_tx.vhd
 ghdl -a ../utils/fifo/fifo.vhd
 
 ghdl -a hdl/controller.vhd
-ghdl -a hdl/top.vhd
+ghdl -a hdl/top_noRNG.vhd
+ghdl -a hdl/tb_noRNG.vhd
 
-#ghdl -e tb.vhd
-#ghdl -r tb.vhd --vcd=sim.vcd
+ghdl -e tb_noRNG
+ghdl -r tb_noRNG --vcd=sim.vcd
 
 rm -f *.o *.cf

@@ -49,7 +49,6 @@ begin
 	selectDisplay : process (clk)
 	begin	
 		if rising_edge(clk) then
-			timer <= timer +1;
 			
 			if timer = DURATION then
 				timer <= 0;
@@ -57,6 +56,8 @@ begin
 				if currentDisplay = 7 then currentDisplay <= 0;
 				else currentDisplay <= currentDisplay +1;
 				end if;
+			else
+				timer <= timer +1;
 			end if;
 		end if;
 
