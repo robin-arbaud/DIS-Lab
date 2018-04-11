@@ -11,13 +11,13 @@ use work.controller;
 entity top is
 	port
 	(
-		CLK	: in  std_logic;
-		RST	: in  std_logic;
-		REQ	: in  std_logic;
-		MODE	: in  std_logic;
-		UART_TX	: out std_logic;
-		DISPLAY_SEG: out std_logic_vector(7 downto 0);
-		DISPLAY_AN : out std_logic_vector(7 downto 0)
+		CLK			: in  std_logic;
+		RST			: in  std_logic;
+		REQ			: in  std_logic;
+		MODE		: in  std_logic;
+		UART_TX		: out std_logic;
+		DISPLAY_SEG	: out std_logic_vector(7 downto 0);
+		DISPLAY_AN	: out std_logic_vector(7 downto 0)
 	);
 end top;
 --
@@ -49,6 +49,11 @@ architecture beh of top is
 	signal seg_data6	: std_logic_vector(3 downto 0);
 	signal seg_data7	: std_logic_vector(3 downto 0);
 
+	-- Inputs --> controller
+	signal req_clean	: std_logic := '0';
+	signal req_pulse	: std_logic := '0';
+	signal mode_clean	: std_logic := '0';
+
 begin
 
 	ctrl : entity work.controller
@@ -56,8 +61,8 @@ begin
 			CLK_FREQ => CLK_FREQ
 		)
 		port map(
-			clk	=> CLK,
-			rst	=> RST,
+			clk		=> CLK,
+			rst		=> RST,
 			mode	=> MODE,
 			request	=> REQ,
 			rngData	=> rng_data,
@@ -84,21 +89,21 @@ begin
 			BAUDRATE=> BAUDRATE
 		)
 		port map(
-			clk	=> CLK,
-			rst	=> RST,
+			clk		=> CLK,
+			rst		=> RST,
 			send	=> uart_snd,
 			data	=> uart_data,
-			rdy	=> uart_rdy,
-			tx	=> UART_TX
+			rdy		=> uart_rdy,
+			tx		=> UART_TX
 		);
 
 
 	display : entity work.seven_seg_display
 		generic map(
-			CLK_FREQ => CLK_FREQ
+			CLK_FREQ=> CLK_FREQ
 		)
 		port map(
-			clk	=> CLK,
+			clk		=> CLK,
 			useMask	=> seg_use_mask,
 			data0	=> seg_data0,
 			data1	=> seg_data1,
@@ -108,8 +113,42 @@ begin
 			data5	=> seg_data5,
 			data6	=> seg_data6,
 			data7	=> seg_data7,
-			seg	=> DISPLAY_SEG,
+			seg		=> DISPLAY_SEG,
 			anode	=> DISPLAY_AN
+		);
+
+
+	debMode : entity work.debouncer
+		generic map(
+			DELAY	=> 10000,
+			CLK_FREQ=> CLK_FREQ
+		)
+		port map(
+			clk		=> CLK,
+			rst		=> RST,
+			input	=> MODE,
+			output	=> mode_clean
+		);
+
+
+	debRequest : entity work.debouncer
+		generic map(
+			DELAY	=> 10000,
+			CLK_FREQ=> CLK_FREQ
+		)
+		port map(
+			clk		=> CLK,
+			rst		=> RST,
+			input	=> REQ,
+			output	=> req_clean
+		);
+
+
+	pulseRequest : entity work.edge_detector
+		port map(
+			clk		=> CLK,
+			input	=> req_clean,
+			output	=> req_pulse
 		);
 
 end beh;

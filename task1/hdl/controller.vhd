@@ -1,4 +1,5 @@
---
+-------------------------------------------------------------------------------
+-- Main controller for the Random Number Generator
 -------------------------------------------------------------------------------
 --
 library IEEE;
@@ -16,8 +17,8 @@ entity controller is
 		CLK_FREQ : integer --in Hz
 	);
 	port(
-		clk	: in std_logic;
-		rst	: in std_logic;
+		clk		: in std_logic;
+		rst		: in std_logic;
 
 		--input controls
 		mode	: in std_logic;
@@ -50,46 +51,48 @@ end controller;
 --
 architecture behav of controller is
 
+	-- state variables
 	type type_mode is (
 		PROD,
 		TEST
 	);
 	type type_state is (
-		IDDLE,
+		IDLE,
 		PENDING
 	);
 	signal state_mode	: type_mode  := PROD;
-	signal state_state	: type_state := IDDLE;
+	signal state_state	: type_state := IDLE;
 
-	signal output_OK	: std_logic := '0';
-	signal fifo_read_req	: std_logic := '0';
-	signal sent_bytes	: integer range 0 to 16E5 := 0;
+	signal sent_bytes		: integer range 0 to 16E5 := 0;
 	signal requested_bytes	: integer := 0;
 
-	signal fifo_empty	: std_logic := '1';
-	signal fifo_full	: std_logic := '0';
+	-- fifo control
+	signal fifo_empty		: std_logic := '1';
+	signal fifo_full		: std_logic := '0';
+	signal fifo_read_req	: std_logic := '0';
+	signal fifo_write_req	: std_logic := '0';
 
-	signal rng_data_swap	: std_logic_vector(15 downto 0);
-	signal issue_data	: std_logic_vector(7  downto 0);
-	signal uart_send	: std_logic := '0';
-
-	signal modeClean	: std_logic := '0';
-	signal requestClean	: std_logic := '0';
-	signal requestPulse	: std_logic := '0';
-
+	-- outputs control and data
+	signal output_OK		: std_logic := '0';
+	signal uart_send		: std_logic := '0';
+	signal issue_data		: std_logic_vector(7  downto 0);
 
 begin
 --
 -------------------------------------------------------------------------------
 -- Main control and RNG interface
+
+	state_mode <= PROD when (mode = '0') else TEST;
+
 	ctrl : process (clk, rst)
 	begin
 		if rst = '1' then
-			state_state	<= IDDLE;
+			state_state	<= IDLE;
 
 		elsif rising_edge(clk) then
 
-			if state_state = IDDLE and requestPulse = '1' then
+			if state_state = IDLE and request = '1' then
+				-- Initiate generation
 				case state_mode is
 				when PROD => requested_bytes <= 16;
 				when TEST => requested_bytes <= 16E5;
@@ -98,37 +101,37 @@ begin
 				state_state <= PENDING;
 
 			elsif sent_bytes >= requested_bytes then
-				state_state <= IDDLE;
+				-- Generation complete
+				state_state <= IDLE;
 			end if;
 		end if;
 	end process ctrl;
 
-
-	state_mode <= PROD when (modeClean = '0') else TEST;
+	--request data from RNG
 	reqData <= '1' when (fifo_full = '0') and (state_state = PENDING) else '0';
 --
 -------------------------------------------------------------------------------
 -- FIFO instance and control signals
+
 	fifo : entity work.fifo_buffer
 		generic map(
 			DATA_BASE_WIDTH	=> 8,
 			DATA_IN_WIDTH	=> 2,
 			DATA_OUT_WIDTH	=> 1,
-			FIFO_DEPTH	=> 16
+			FIFO_DEPTH		=> 16
 		)
 		port map(
-			clk	=> clk,
-			rst	=> rst,
-			write	=> dataOK,
-			dataIn	=> rng_data_swap,
+			clk		=> clk,
+			rst		=> rst,
+			write	=> fifo_write_req,
+			dataIn	=> rngData,
 			read	=> fifo_read_req,
 			dataOut	=> issue_data,
 			empty	=> fifo_empty,
 			full	=> fifo_full
 		);
 
-	rng_data_swap <= rngData(7 downto 0) & rngData(15 downto 8);
-
+	fifo_write_req <= '1' when dataOk = '1' and state_state = PENDING else '0';
 
 	process (clk) -- Set the output as OK at falling edge, since the buffer
 	begin         -- is synchronized with the falling edge.
@@ -137,7 +140,10 @@ begin
 		end if;
 
 		if rising_edge(clk) then
-			if (fifo_empty = '0' and uartRdy = '1') and (output_ok = '0' and state_state = PENDING) and uart_send = '0' then
+			if fifo_empty = '0' and uartRdy = '1' and output_ok = '0'
+							  and uart_send = '0' and state_state = PENDING then
+			-- check for uart_send and output_ok to make sure that a single
+			-- pulse is generated, because uartRdy is not cleared immediately
 				fifo_read_req <= '1';
 			else
 				fifo_read_req <= '0';
@@ -147,12 +153,15 @@ begin
 --
 -------------------------------------------------------------------------------
 -- Output interfaces
+
 	uartSnd <= uart_send;
 
-	outIf : process (clk)
+	outIf : process (clk, state_state)
 	begin	
-		if state_state = IDDLE then
+		if state_state = IDLE then
 			sent_bytes <= 0;
+		-- part of the reset procedure, implemented here to avoid a
+		-- multi-driven net error
 
 		elsif rising_edge(clk) then
 
@@ -169,14 +178,14 @@ begin
 					--display 4 LSBs
 					case sent_bytes is
 					when 15 =>	data0 <= issue_data(3 downto 0);
-							data1 <= issue_data(7 downto 4);
+								data1 <= issue_data(7 downto 4);
 					when 14 =>	data2 <= issue_data(3 downto 0);
-							data3 <= issue_data(7 downto 4);
+								data3 <= issue_data(7 downto 4);
 					when 13 =>	data4 <= issue_data(3 downto 0);
-							data5 <= issue_data(7 downto 4);
+								data5 <= issue_data(7 downto 4);
 					when 12 =>	data6 <= issue_data(3 downto 0);
-							data7 <= issue_data(7 downto 4);
-					when others =>	NULL;
+								data7 <= issue_data(7 downto 4);
+					when others => NULL;
 					end case;
 
 					useMask <= "11111111";
@@ -189,39 +198,10 @@ begin
 			else
 				uart_send <= '0';
 			end if;
+
 		end if;
 	end process outIf;
 --
 -------------------------------------------------------------------------------
--- clean inputs
-	debMode : entity work.debouncer
-		generic map(
-			DELAY	=> 10000,
-			CLK_FREQ=> CLK_FREQ
-		)
-		port map(
-			clk	=> clk,
-			rst	=> rst,
-			input	=> mode,
-			output	=> modeClean
-		);
-
-	debRequest : entity work.debouncer
-		generic map(
-			DELAY	=> 10000,
-			CLK_FREQ=> CLK_FREQ
-		)
-		port map(
-			clk	=> clk,
-			rst	=> rst,
-			input	=> request,
-			output	=> requestClean
-		);
-
-	pulseRequest : entity work.edge_detector
-		port map(
-			clk	=> clk,
-			input	=> requestClean,
-			output	=> requestPulse
-		);
+--
 end behav;
