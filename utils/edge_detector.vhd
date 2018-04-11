@@ -3,15 +3,15 @@
 --------------------------------------------------------------------------------
 --
 library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_1164.all;
 --
 --------------------------------------------------------------------------------
 --
 entity edge_detector is
 
 	port(
-		clk	: in std_logic;
-		input	: in std_logic;
+		clk		: in  std_logic;
+		input	: in  std_logic;
 		output	: out std_logic
 	);
 

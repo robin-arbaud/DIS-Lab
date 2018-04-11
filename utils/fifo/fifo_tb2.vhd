@@ -1,5 +1,5 @@
 library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 --
 --------------------------------------------------------------------------------
@@ -11,22 +11,23 @@ end fifo_tb2;
 --
 architecture behav of fifo_tb2 is
 
-	--  Declaration of the component that will be instantiated.
 	component fifo is
 
 		generic(
 			DATA_BASE_WIDTH	: integer;
 			DATA_IN_WIDTH	: integer;
 			DATA_OUT_WIDTH	: integer;
-			FIFO_DEPTH	: integer
+			FIFO_DEPTH		: integer
 		);
 		port(
-			clk	: in  std_logic;
-			rst	: in  std_logic;
+			clk		: in  std_logic;
+			rst		: in  std_logic;
 			write	: in  std_logic;
-			dataIn	: in  std_logic_vector (DATA_IN_WIDTH *DATA_BASE_WIDTH -1 downto 0);
+			dataIn	: in  std_logic_vector (DATA_IN_WIDTH *DATA_BASE_WIDTH -1
+																	  downto 0);
 			read	: in  std_logic;
-			dataOut	: out std_logic_vector (DATA_OUT_WIDTH*DATA_BASE_WIDTH -1 downto 0);
+			dataOut	: out std_logic_vector (DATA_OUT_WIDTH*DATA_BASE_WIDTH -1
+																	  downto 0);
 			empty	: out std_logic;
 			full	: out std_logic
 		);
@@ -52,14 +53,14 @@ begin
 		FIFO_DEPTH	=> 8
 	)
 	port map (
-		clk => clk,
-	 	rst => rst,
-		write => write ,
-		dataIn => dataIn,
-		read => read,
-		dataOut => dataOut,
-		empty => empty,
-		full => full
+		clk		=> clk,
+	 	rst		=> rst,
+		write	=> write ,
+		dataIn	=> dataIn,
+		read	=> read,
+		dataOut	=> dataOut,
+		empty	=> empty,
+		full	=> full
 	);
 
 	clk_gen : process

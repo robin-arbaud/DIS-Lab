@@ -8,30 +8,32 @@
 --
 -- Read (resp Write) signals are ignored if the buffer is empty (resp full).
 --
--- based on from http://www.deathbylogic.com/2013/07/vhdl-standard-fifo/
+-- inspired from http://www.deathbylogic.com/2013/07/vhdl-standard-fifo/
 --------------------------------------------------------------------------------
 --
 
 library IEEE;
-USE IEEE.STD_LOGIC_1164.ALL;
-USE IEEE.NUMERIC_STD.ALL;
+use IEEE.STD_LOGIC_1164.all;
+use IEEE.NUMERIC_STD.all;
 --
 --------------------------------------------------------------------------------
 --
 entity fifo_buffer is
 	Generic (
-		constant DATA_BASE_WIDTH: integer; --storage unit length
-		constant DATA_IN_WIDTH	: integer; --number of storage units stored on write
-		constant DATA_OUT_WIDTH	: integer; --number of storage units loaded on read
-		constant FIFO_DEPTH	: integer  --number of available storage units
+		constant DATA_BASE_WIDTH: integer;	--storage unit length
+		constant DATA_IN_WIDTH	: integer;	--number of units stored on write
+		constant DATA_OUT_WIDTH	: integer;	--number of units loaded on read
+		constant FIFO_DEPTH		: integer	--number of available units
 	);
 	Port ( 
-		clk	: in  std_logic;
-		rst	: in  std_logic;
+		clk		: in  std_logic;
+		rst		: in  std_logic;
 		write	: in  std_logic;
-		dataIn	: in  std_logic_vector (DATA_IN_WIDTH *DATA_BASE_WIDTH -1 downto 0);
+		dataIn	: in  std_logic_vector (DATA_IN_WIDTH *DATA_BASE_WIDTH -1
+																	  downto 0);
 		read	: in  std_logic;
-		dataOut	: out std_logic_vector (DATA_OUT_WIDTH*DATA_BASE_WIDTH -1 downto 0);
+		dataOut	: out std_logic_vector (DATA_OUT_WIDTH*DATA_BASE_WIDTH -1
+																	  downto 0);
 		empty	: out std_logic;
 		full	: out std_logic
 	);
@@ -52,10 +54,11 @@ architecture behavioral of fifo_buffer is
 	signal writeCd : std_logic := '0';
 
 begin
-	readCd  <= '1' when (read = '1')  and (lead >= DATA_OUT_WIDTH) else '0';
-	--read is requested and possible
-	writeCd <= '1' when (write = '1') and (lead <= FIFO_DEPTH - DATA_IN_WIDTH) else '0';
-	--write is requested and possible
+						--read is requested and possible
+	readCd  <= '1' when (read  = '1') and (lead >= DATA_OUT_WIDTH) else '0';
+						--write is requested and possible
+	writeCd <= '1' when (write = '1') and (lead <= FIFO_DEPTH-DATA_IN_WIDTH)
+																	   else '0';
 
 	process(clk, rst)
 	begin
@@ -67,41 +70,47 @@ begin
 		elsif falling_edge(clk) then
 --
 --------------------------------------------------------------------------------
---
-			--read procedure
+-- Read procedure
+
 			if readCd = '1' then
 
+				--read mem into dataOut
 				for count in 1 to DATA_OUT_WIDTH loop
 					dataOut( count*DATA_BASE_WIDTH -1
 						downto (count-1)*DATA_BASE_WIDTH ) 
 						<= mem(tail + count -1);
 				end loop;
 
+				--update tail
 				tail <= (tail + DATA_OUT_WIDTH) mod FIFO_DEPTH;
 				
+				--update lead
 				if writeCd = '0' then --if no simultaneous write
-					lead <= lead - DATA_OUT_WIDTH; --decrease lead
+					lead <= lead - DATA_OUT_WIDTH;
 				else
 					lead <= lead - DATA_OUT_WIDTH + DATA_IN_WIDTH;
 				end if;
 			end if;
 --
 --------------------------------------------------------------------------------
---
-			--write procedure
+-- Write procedure
+
 			if writeCd = '1' then
 
+				--store dataIn into mem
 				for count in 1 to DATA_IN_WIDTH loop
 					mem(head + count -1) <=
 						dataIn(count*DATA_BASE_WIDTH -1
 						downto (count-1)*DATA_BASE_WIDTH);
 				end loop;
 
+				--update head
 				head <= (head + DATA_IN_WIDTH) mod FIFO_DEPTH;
 
+				--update lead
 				if readCd = '0' then --if no simultaneous read
 					lead <= lead + DATA_IN_WIDTH; --increase lead
-				-- else do nothing, update already done
+				-- else do nothing, update already done in read procedure
 				end if;
 			end if;
 		end if;

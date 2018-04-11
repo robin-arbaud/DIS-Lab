@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 --
 library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 --
 --------------------------------------------------------------------------------
@@ -12,14 +12,14 @@ entity debouncer is
 
 	generic(
 		DELAY	: integer; --in us
-		CLK_FREQ: integer --in Hz
+		CLK_FREQ: integer  --in Hz
 	);
 
 	port(
-		clk	: in std_logic;
-		rst	: in std_logic;
-		input	: in std_logic;
-		output	: out std_logic --debounced input
+		clk		: in  std_logic;
+		rst		: in  std_logic;
+		input	: in  std_logic;
+		output	: out std_logic
 	);
 
 end debouncer;

@@ -15,22 +15,22 @@ use IEEE.NUMERIC_STD.all;
 entity seven_seg_display is
 
 	generic(
-		CLK_FREQ : integer -- in Hz
+		CLK_FREQ : integer --in Hz
 	);
 	port(
-		clk   : in std_logic;
-		useMask: in std_logic_vector(7 downto 0);
+		clk  	: in  std_logic;
+		useMask	: in  std_logic_vector(7 downto 0);
 		-- Specify which displays are actually used
-		data0 : in std_logic_vector(3 downto 0);
-		data1 : in std_logic_vector(3 downto 0);
-		data2 : in std_logic_vector(3 downto 0);
-		data3 : in std_logic_vector(3 downto 0);
-		data4 : in std_logic_vector(3 downto 0);
-		data5 : in std_logic_vector(3 downto 0);
-		data6 : in std_logic_vector(3 downto 0);
-		data7 : in std_logic_vector(3 downto 0);
-		seg   : out std_logic_vector(7 downto 0);
-		anode : out std_logic_vector(7 downto 0)
+		data0	: in  std_logic_vector(3 downto 0);
+		data1	: in  std_logic_vector(3 downto 0);
+		data2	: in  std_logic_vector(3 downto 0);
+		data3	: in  std_logic_vector(3 downto 0);
+		data4	: in  std_logic_vector(3 downto 0);
+		data5	: in  std_logic_vector(3 downto 0);
+		data6	: in  std_logic_vector(3 downto 0);
+		data7	: in  std_logic_vector(3 downto 0);
+		seg  	: out std_logic_vector(7 downto 0);
+		anode	: out std_logic_vector(7 downto 0)
 	);
 
 end seven_seg_display;
@@ -39,9 +39,9 @@ end seven_seg_display;
 --
 architecture behavioral of seven_seg_display is
 
+	constant DURATION : integer := CLK_FREQ/333; -- Switch display every 3 ms
 	signal bin : std_logic_vector(3 downto 0) := "0000";
 	signal currentDisplay : integer range 0 to 7 := 0;
-	constant DURATION : integer := CLK_FREQ/333; -- Switch display every 3 ms
 	signal timer : integer range 0 to DURATION := 0;
 
 begin
@@ -56,11 +56,12 @@ begin
 				if currentDisplay = 7 then currentDisplay <= 0;
 				else currentDisplay <= currentDisplay +1;
 				end if;
+
 			else
 				timer <= timer +1;
 			end if;
-		end if;
 
+		end if;
 	end process selectDisplay;
 --
 -------------------------------------------------------------------------------
