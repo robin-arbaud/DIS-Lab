@@ -30,7 +30,7 @@ architecture Behavioral of ring_osc is
 	attribute KEEP of ring : signal is "true";
 
 begin
-	process (ring,reset) begin
+	process (ring, reset) begin
 
 		for i in ring'range loop
 
