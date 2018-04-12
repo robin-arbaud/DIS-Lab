@@ -34,7 +34,7 @@ architecture behav of noise_source is
 begin
 --
 --------------------------------------------------------------------------------
--- Instantiate aray of ring oscillators
+-- Instantiate array of ring oscillators
 
 	osc_gen : for count in 0 to NUM_OF_RINGS -1 generate
 		ro : entity work.ring_osc
