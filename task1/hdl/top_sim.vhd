@@ -2,41 +2,36 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.utils_pkg.debouncer;
 use work.utils_pkg.uart_tx;
 use work.utils_pkg.seven_seg_display;
 use work.controller;
 --
 --------------------------------------------------------------------------------
 --
-entity top_noRNG is
-	port(
-		CLK	: in  std_logic;
-		RST	: in  std_logic;
-		REQ	: in  std_logic;
-		MODE	: in  std_logic;
-		UART_TX	: out std_logic;
-		DISPLAY_SEG: out std_logic_vector(7 downto 0);
-		DISPLAY_AN : out std_logic_vector(7 downto 0);
-		RNG_rng_data : in  std_logic_vector (15 downto 0);
-		RNG_data_ok  : in  std_logic;
-		RNG_req_data : out std_logic
+entity top is
+	port
+	(
+		CLK			: in  std_logic;
+		RST			: in  std_logic;
+		REQ			: in  std_logic;
+		MODE		: in  std_logic;
+		UART_TX		: out std_logic;
+		DISPLAY_SEG	: out std_logic_vector(7 downto 0);
+		DISPLAY_AN	: out std_logic_vector(7 downto 0)
 	);
-end top_noRNG;
+end top;
 --
 --------------------------------------------------------------------------------
 --
-architecture behav of top_noRNG is
+architecture beh of top is
 
 	constant CLK_FREQ	: integer := 100E6;
-	constant BAUDRATE	: integer := 38400;
+	constant BAUDRATE	: integer := 9600;
 
 	-- Controller <--> RNG
-	--signal rng_data		: std_logic_vector(15 downto 0);
-	--signal data_ok		: std_logic;
-	--signal req_data		: std_logic;
-	signal rng_data_ok_dbncd	: std_logic := '0';
-	signal rng_data_ok_pulse	: std_logic := '0';
+	signal rng_data		: std_logic_vector(15 downto 0);
+	signal data_ok		: std_logic;
+	signal req_data		: std_logic;
 
 	-- Controller <--> UART
 	signal uart_rdy		: std_logic;
@@ -61,13 +56,13 @@ begin
 			CLK_FREQ => CLK_FREQ
 		)
 		port map(
-			clk	=> CLK,
-			rst	=> RST,
+			clk		=> CLK,
+			rst		=> RST,
 			mode	=> MODE,
 			request	=> REQ,
-			rngData	=> RNG_rng_data,
-			dataOK	=> rng_data_ok_pulse,
-			reqData	=> RNG_req_data,
+			rngData	=> rng_data,
+			dataOK	=> data_ok,
+			reqData	=> req_data,
 			uartRdy	=> uart_rdy,
 			uartSnd	=> uart_snd,
 			uartData=> uart_data,
@@ -81,25 +76,7 @@ begin
 			data6	=> seg_data6,
 			data7	=> seg_data7
 		);
-
-	deb : entity work.debouncer
-		generic map(
-			CLK_FREQ=> CLK_FREQ,
-			DELAY	=> 20000
-		)
-		port map(
-			clk	=> CLK,
-			rst	=> RST,
-			input	=> RNG_data_ok,
-			output	=> rng_data_ok_dbncd
-		);
-
-	pulse_gen : entity work.edge_detector
-		port map(
-			clk	=> CLK,
-			input	=> rng_data_ok_dbncd,
-			output	=> rng_data_ok_pulse
-		);
+		
 
 	uart_trans : entity work.uart_tx
 		generic map(
@@ -107,21 +84,31 @@ begin
 			BAUDRATE=> BAUDRATE
 		)
 		port map(
-			clk	=> CLK,
-			rst	=> RST,
+			clk		=> CLK,
+			rst		=> RST,
 			send	=> uart_snd,
 			data	=> uart_data,
-			rdy	=> uart_rdy,
-			tx	=> UART_TX
+			rdy		=> uart_rdy,
+			tx		=> UART_TX
+		);
+
+
+	rng : entity work.random_number_generator
+		port map(
+			clk		=> CLK,
+			rst		=> RST,
+			en		=> req_data,
+			data	=> rng_data,
+			dataOK	=> data_ok
 		);
 
 
 	display : entity work.seven_seg_display
 		generic map(
-			CLK_FREQ => CLK_FREQ
+			CLK_FREQ=> CLK_FREQ
 		)
 		port map(
-			clk	=> CLK,
+			clk		=> CLK,
 			useMask	=> seg_use_mask,
 			data0	=> seg_data0,
 			data1	=> seg_data1,
@@ -131,8 +118,8 @@ begin
 			data5	=> seg_data5,
 			data6	=> seg_data6,
 			data7	=> seg_data7,
-			seg	=> DISPLAY_SEG,
+			seg		=> DISPLAY_SEG,
 			anode	=> DISPLAY_AN
 		);
 
-end behav;
+end beh;

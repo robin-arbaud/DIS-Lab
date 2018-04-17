@@ -75,7 +75,7 @@ architecture behav of controller is
 	-- outputs control and data
 	signal output_OK		: std_logic := '0';
 	signal uart_send		: std_logic := '0';
-	signal issue_data		: std_logic_vector(7  downto 0);
+	signal issue_data		: std_logic_vector(7 downto 0);
 
 begin
 --

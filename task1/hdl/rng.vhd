@@ -11,9 +11,6 @@ use work.noise_source;
 --------------------------------------------------------------------------------
 --
 entity random_number_generator is
-	generic(
-		CLK_FREQ : integer --in Hz
-	);
 	port(
 		clk		: in  std_logic;
 		rst		: in  std_logic;

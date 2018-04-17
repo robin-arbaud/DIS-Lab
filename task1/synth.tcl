@@ -5,7 +5,7 @@
 #
 # -----------------------------------------------------------------------------
 #
-create_project -part xc7a100t -force vivado/noRNG
+create_project -part xc7a100t -force vivado/task1
 #
 # -----------------------------------------------------------------------------
 #
@@ -16,14 +16,17 @@ read_vhdl ../utils/uart_tx.vhd
 read_vhdl ../utils/seven_seg_display.vhd
 read_vhdl ../utils/fifo/fifo.vhd
 
+read_vhdl hdl/ring_osc.vhd
+read_vhdl hdl/noise_source.vhd
+read_vhdl hdl/rng.vhd
 read_vhdl hdl/controller.vhd
-read_vhdl hdl/top_noRNG_impl.vhd
+read_vhdl hdl/top.vhd
 
-read_xdc task1_noRNG.xdc
+read_xdc task1.xdc
 #
 # -----------------------------------------------------------------------------
 #
-synth_design -top top_noRNG
+synth_design -top top
 #
 # -----------------------------------------------------------------------------
 #
@@ -33,6 +36,6 @@ route_design
 #
 # -----------------------------------------------------------------------------
 #
-write_bitstream -force noRNG.bit
+write_bitstream -force task1.bit
 #
 # -----------------------------------------------------------------------------

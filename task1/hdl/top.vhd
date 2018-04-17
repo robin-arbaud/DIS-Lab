@@ -64,7 +64,7 @@ begin
 			clk		=> CLK,
 			rst		=> RST,
 			mode	=> MODE,
-			request	=> REQ,
+			request	=> req_pulse,
 			rngData	=> rng_data,
 			dataOK	=> data_ok,
 			reqData	=> req_data,
@@ -95,6 +95,16 @@ begin
 			data	=> uart_data,
 			rdy		=> uart_rdy,
 			tx		=> UART_TX
+		);
+
+
+	rng : entity work.random_number_generator
+		port map(
+			clk		=> CLK,
+			rst		=> RST,
+			en		=> req_data,
+			data	=> rng_data,
+			dataOK	=> data_ok
 		);
 
 
