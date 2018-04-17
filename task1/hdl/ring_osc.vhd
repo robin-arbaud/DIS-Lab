@@ -28,6 +28,9 @@ architecture Behavioral of ring_osc is
 	-- makes sure that the ring will not be optimized out
 	attribute KEEP : string;
 	attribute KEEP of ring : signal is "true";
+	-- allow combinatorial loops (otherwise an error occurs in synthesis)
+	attribute ALLOW_COMBINATORIAL_LOOPS : string;
+	attribute ALLOW_COMBINATORIAL_LOOPS of ring : signal is "true";
 
 begin
 	process (ring, reset) begin

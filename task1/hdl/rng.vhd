@@ -114,7 +114,7 @@ begin
 		end if;
 	end process sr1;
 
-	filt_bitstream <= '0' ; -- TODO find the formula
+	filt_bitstream <= shiftreg1(0); -- TODO find the formula
 --
 --------------------------------------------------------------------------------
 -- Post-processing second shift register

@@ -26,7 +26,7 @@ end top;
 architecture beh of top is
 
 	constant CLK_FREQ	: integer := 100E6;
-	constant BAUDRATE	: integer := 9600;
+	constant BAUDRATE	: integer := 38400;
 
 	-- Controller <--> RNG
 	signal rng_data		: std_logic_vector(15 downto 0);

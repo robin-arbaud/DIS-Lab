@@ -53,6 +53,8 @@ begin
 	process (osc)
 	begin
 
+		osc_xored <= (others => '0');
+
 		for i in osc'range loop
 			if (i = 0) then
 				osc_xored(i) <= osc(i);
