@@ -9,11 +9,18 @@ ghdl -a ../utils/seven_seg_display.vhd
 ghdl -a ../utils/uart_tx.vhd
 ghdl -a ../utils/fifo/fifo.vhd
 
+ghdl -a hdl/ring_osc.vhd
+ghdl -a hdl/noise_source.vhd
+ghdl -a hdl/rng.vhd
 ghdl -a hdl/controller.vhd
-ghdl -a hdl/top_noRNG_sim.vhd
-ghdl -a hdl/tb_noRNG.vhd
+ghdl -a hdl/controller_tb.vhd
+ghdl -a hdl/top_sim.vhd
+#ghdl -a hdl/top_tb.vhd
 
-ghdl -e tb_noRNG
-ghdl -r tb_noRNG --vcd=sim.vcd
+ghdl -e controller_tb
+ghdl -r controller_tb --vcd=sim_controller.vcd
+
+#ghdl -e top_tb
+#ghdl -r top_tb --vcd=top_sim.vcd
 
 rm -f *.o *.cf
