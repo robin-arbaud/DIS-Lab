@@ -28,8 +28,8 @@ end noise_source;
 --
 architecture behav of noise_source is
 
-	signal osc : std_logic_vector(0 to NUM_OF_RINGS -1) := (others => '0');
-	signal osc_xored : std_logic_vector(0 to NUM_OF_RINGS -1) := (others => '0');
+	signal osc		: std_logic_vector(0 to NUM_OF_RINGS -1) := (others => '0');
+	signal osc_xored: std_logic_vector(0 to NUM_OF_RINGS -1) := (others => '0');
 
 begin
 --
@@ -50,10 +50,8 @@ begin
 --------------------------------------------------------------------------------
 -- Connect ring oscillators outputs
 
-	process (osc)
+	process (osc, osc_xored)
 	begin
-
-		osc_xored <= (others => '0');
 
 		for i in osc'range loop
 			if (i = 0) then

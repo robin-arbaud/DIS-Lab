@@ -14,13 +14,10 @@ ghdl -a hdl/noise_source.vhd
 ghdl -a hdl/rng.vhd
 ghdl -a hdl/controller.vhd
 ghdl -a hdl/controller_tb.vhd
+ghdl -a hdl/top.vhd
 ghdl -a hdl/top_sim.vhd
-#ghdl -a hdl/top_tb.vhd
 
 ghdl -e controller_tb
 ghdl -r controller_tb --vcd=sim_controller.vcd
-
-#ghdl -e top_tb
-#ghdl -r top_tb --vcd=top_sim.vcd
 
 rm -f *.o *.cf

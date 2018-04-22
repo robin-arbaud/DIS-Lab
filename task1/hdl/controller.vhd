@@ -1,6 +1,6 @@
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- Main controller for the Random Number Generator
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 --
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
@@ -10,11 +10,11 @@ use work.utils_pkg.debouncer;
 use work.utils_pkg.edge_detector;
 use work.utils_pkg.fifo_buffer;
 --
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 --
 entity controller is
 	generic(
-		CLK_FREQ : integer --in Hz
+		constant CLK_FREQ : integer --in Hz
 	);
 	port(
 		clk		: in std_logic;
@@ -47,9 +47,11 @@ entity controller is
 	);
 end controller;
 --
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 --
 architecture behav of controller is
+
+	constant LENGTH : integer := 16; --random number length (in bytes)
 
 	-- state variables
 	type type_mode is (
@@ -63,7 +65,7 @@ architecture behav of controller is
 	signal state_mode	: type_mode  := PROD;
 	signal state_state	: type_state := IDLE;
 
-	signal sent_bytes		: integer range 0 to 16E5 := 0;
+	signal sent_bytes		: integer range 0 to LENGTH *1E5 := 0;
 	signal requested_bytes	: integer := 0;
 
 	-- fifo control
@@ -79,7 +81,7 @@ architecture behav of controller is
 
 begin
 --
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- Main control and RNG interface
 
 	state_mode <= PROD when (mode = '0') else TEST;
@@ -94,8 +96,8 @@ begin
 			if state_state = IDLE and request = '1' then
 				-- Initiate generation
 				case state_mode is
-				when PROD => requested_bytes <= 16;
-				when TEST => requested_bytes <= 16E5;
+				when PROD => requested_bytes <= LENGTH;
+				when TEST => requested_bytes <= LENGTH *1E5;
 				end case;
 
 				state_state <= PENDING;
@@ -110,7 +112,7 @@ begin
 	--request data from RNG
 	reqData <= '1' when (fifo_full = '0') and (state_state = PENDING) else '0';
 --
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- FIFO instance and control signals
 
 	fifo : entity work.fifo_buffer
@@ -118,7 +120,7 @@ begin
 			DATA_BASE_WIDTH	=> 8,
 			DATA_IN_WIDTH	=> 2,
 			DATA_OUT_WIDTH	=> 1,
-			FIFO_DEPTH		=> 16
+			FIFO_DEPTH		=> LENGTH
 		)
 		port map(
 			clk		=> clk,
@@ -151,7 +153,7 @@ begin
 		end if;
 	end process;
 --
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- Output interfaces
 
 	uartSnd <= uart_send;
@@ -177,14 +179,14 @@ begin
 				when PROD =>
 					--display 4 LSBs
 					case sent_bytes is
-					when 15 =>	data0 <= issue_data(3 downto 0);
-								data1 <= issue_data(7 downto 4);
-					when 14 =>	data2 <= issue_data(3 downto 0);
-								data3 <= issue_data(7 downto 4);
-					when 13 =>	data4 <= issue_data(3 downto 0);
-								data5 <= issue_data(7 downto 4);
-					when 12 =>	data6 <= issue_data(3 downto 0);
-								data7 <= issue_data(7 downto 4);
+					when LENGTH -1 => data0 <= issue_data(3 downto 0);
+									  data1 <= issue_data(7 downto 4);
+					when LENGTH -2 => data2 <= issue_data(3 downto 0);
+									  data3 <= issue_data(7 downto 4);
+					when LENGTH -3 => data4 <= issue_data(3 downto 0);
+									  data5 <= issue_data(7 downto 4);
+					when LENGTH -4 => data6 <= issue_data(3 downto 0);
+									  data7 <= issue_data(7 downto 4);
 					when others => NULL;
 					end case;
 
@@ -202,6 +204,6 @@ begin
 		end if;
 	end process outIf;
 --
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 --
 end behav;
