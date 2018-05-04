@@ -1,0 +1,3 @@
+[submodule "Group15"]
+	path = task2/submodules/ldis
+	url = https://btutzer@bitbucket.org/btutzer/ldis.git

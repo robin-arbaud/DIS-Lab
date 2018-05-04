@@ -1,0 +1,15 @@
+*.cf
+*.vcd
+*.ghw
+*.bit
+*.edif
+**/.Xil
+*.cache
+*.hw
+*.xpr
+**/usage_statistics*
+*.jou
+*.log
+*.zip
+*.cap
+**/bin*
