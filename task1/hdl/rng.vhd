@@ -37,9 +37,9 @@ architecture behav of random_number_generator is
 	-- Post-processing
 	signal shiftreg1		: std_logic_vector(255 downto 0) := (others => '0');
 	signal shiftreg2		: std_logic_vector( 15 downto 0) := (others => '0');
-	signal bitstream		: std_logic := '0'; --input to 1st shifreg
+	signal bitstream		: std_logic := '0'; --input to 1st shiftreg
 	signal filt_bitstream	: std_logic := '0'; --input to 2nd shiftreg
-	signal en_sr2			: std_logic := '0'; --enable signal for 2nd shifreg
+	signal en_sr2			: std_logic := '0'; --enable signal for 2nd shiftreg
 
 	signal rst_ns	: std_logic := '1'; --disable signal for noise source
 
