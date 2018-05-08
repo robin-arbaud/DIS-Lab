@@ -1,6 +1,7 @@
 *.swo
 *.swp
 *.vcd
+*.gtkw
 vivado*
 .Xil*
 *.bit

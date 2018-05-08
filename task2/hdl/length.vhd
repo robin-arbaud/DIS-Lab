@@ -7,7 +7,7 @@
 --
 -- The string is transmitted chunk by chunk, so that the interface size can be
 -- fixed. The dataNew flag indicates that the current chunk at the dataIn port
--- has not yet been processed. The dataEnd flag indicates the the current chunk
+-- has not yet been processed. The dataEnd flag indicates that the current chunk
 -- is the last one to process.
 --
 -- The pending flag should be set to zero once the length has been measured. It
@@ -39,7 +39,7 @@ entity length is
 		dataEnd	: in  std_logic;
 		pending	: in  std_logic;
 
-		length	: out integer;
+		length	: out integer range 0 to MAX_LENGTH;
 		finish	: out std_logic;
 		tooLong : out std_logic
 	);
