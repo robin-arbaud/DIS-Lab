@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 -- Block to perform the variable-length hashing for Argon2.
 
--- Never set the inValid flag is the available flag is not already set. This
+-- Never set the inValid flag if the newDataRdy flag is not already set. This
 -- would result in loss of data, as there is no input buffer.
 -------------------------------------------------------------------------------
 --
@@ -57,47 +57,54 @@ architecture behav of hash is
 	-- Bytes already transmitted to Blake2 in first phase
 	signal in_byte_count	: integer range 1 to 1024 := 1;
 	-- Position of last byte in last chunk of input	
-	signal last_byte_idx	: integer range 0 to 127;
+	signal last_byte_idx	: integer range 1 to  128 := 1;
 	-- Number of hashes performed in second phase
-	signal iter_count		: integer range 1 to 31 := 1;
+	signal iter_count		: integer range 1 to   31 := 1;
+
 
 	-- Blake2b module control signals
 	--inputs
-	signal b2_msg_chk	: std_logic_vector(128*8 -1 downto 0);
-	signal b2_new_chk	: std_logic;
-	signal b2_last_chk	: std_logic;
+	signal b2_msg_chk		: std_logic_vector(128*8 -1 downto 0);
+	signal b2_new_chk		: std_logic;
+	signal b2_last_chk		: std_logic;
 	signal b2_msg_length	: integer range 0 to 1032;
-	signal b2_hash_length	: integer range 1 to 64;
+	signal b2_hash_length	: integer range 1 to   64;
 	--outputs
-	signal b2_rdy		: std_logic;
-	signal b2_finish	: std_logic;
-	signal b2_result	: std_logic_vector(64*8 -1 downto 0);
+	signal b2_result		: std_logic_vector( 64*8 -1 downto 0);
+	signal b2_rdy			: std_logic;
+	signal b2_finish		: std_logic;
+
 
 	-- Storage for V_i
 	type Vmem is array (1 to 31) of std_logic_vector(64*8 -1 downto 0);
 	signal v : Vmem;
 
+	signal DEBUG_STATE : integer range 1 to 6;
+
 begin
+
+	with state select
+		DEBUG_STATE <=	1 when IDLE,
+						2 when INIT,
+						3 when INIT_END,
+						4 when B2_WAIT_INIT,
+						5 when CONT,
+						6 when CONT_END;
 
 	r <= integer( ceil( real(t)/real(32) )) -2 when t > 64 else 0;
 
 	with state select
-		newDataRdy <= '0' when CONT,
-					  '0' when CONT_END,
-					  '1' when IDLE,
-					  b2_rdy when others;
+		newDataRdy <= '1'		when IDLE,
+					  b2_rdy	when INIT,
+					  '0'		when others;
 
 	newReqRdy <= '1' when state = IDLE else '0';
 
-
+--
+--------------------------------------------------------------------------------
+--
 	process (clk, rst)
 	begin
-
-		--default values
-		if rising_edge(clk) then
-			b2_new_chk	<= '0';
-			b2_last_chk	<= '0';
-		end if;
 
 		if rst = '1' then
 			hash	<= (others => '0');
@@ -105,11 +112,19 @@ begin
 
 			state	<= IDLE;
 			in_byte_count	<= 1;
+			last_byte_idx	<= 1;
 			iter_count		<= 1;
 			b2_msg_chk		<= (others => '0');
+			b2_new_chk		<= '0';
+			b2_last_chk		<= '0';
 
 
 		elsif rising_edge(clk) then
+
+			--default values
+			b2_new_chk	<= '0';
+			b2_last_chk	<= '0';
+
 --
 --------------------------------------------------------------------------------
 -- Initialization
@@ -118,32 +133,68 @@ begin
 
 				t <= tagSize;
 				b2_msg_length <= 8 + msgLength;
-				last_byte_idx <= msgLength mod 128;
 				iter_count <= 1;
 				outValid <= '0';
 
+				if (msgLength mod 128) = 0 then
+					last_byte_idx <= 128;
+				else
+					last_byte_idx <= (msgLength mod 128);
+				end if;
+
+
 				if msgLength > 128 then
-					-- more chunks to come
+					--more chunks to come
 					b2_msg_chk <= msgIn;
 					b2_new_chk <= '1';
 					in_byte_count <= 128;
 					state <= INIT;
 
-				elsif b2_msg_length <= 128 then
-					-- no more chunks to come, and room for LE32(T)
-					b2_msg_chk((last_byte_idx+8)*8 -1 downto 0)
-						 <= le32_t & msgIn(last_byte_idx*8 -1 downto 0);
-					b2_msg_chk(128*8 -1 downto (last_byte_idx+8)*8)
+				elsif msgLength <= 120 then
+					--no more chunks to come, and room for LE32(T)
+					b2_msg_chk( (msgLength+8)*8 -1 downto 0 )
+						 <= le32_t & msgIn( msgLength*8 -1 downto 0 );
+
+					b2_msg_chk( 128*8 -1 downto (msgLength+8)*8 )
 						 <= (others => '0');
+
 					b2_new_chk  <= '1';
 					b2_last_chk <= '1';
 					state <= B2_WAIT_INIT;
 
-				else
+				elsif msgLength = 128 then
 					--no more chunks to come but no room for LE32(T)
-					b2_msg_chk
-						 <= le32_t( (128-last_byte_idx)*8 -1 downto 0)
-						  & msgIn(last_byte_idx*8 -1 downto 0);
+					b2_msg_chk <= msgIn;
+					b2_new_chk <= '1';
+					state <= INIT_END;
+
+				else
+					--no more chunks to come, some room but not enough
+					case msgLength is
+					when 127 =>
+						b2_msg_chk <= le32_t( 1        *8 -1 downto 0)
+									& msgIn ( msgLength*8 -1 downto 0);
+					when 126 =>
+						b2_msg_chk <= le32_t( 2        *8 -1 downto 0)
+									& msgIn ( msgLength*8 -1 downto 0);
+					when 125 =>
+						b2_msg_chk <= le32_t( 3        *8 -1 downto 0)
+									& msgIn ( msgLength*8 -1 downto 0);
+					when 124 =>
+						b2_msg_chk <= le32_t( 4        *8 -1 downto 0)
+									& msgIn ( msgLength*8 -1 downto 0);
+					when 123 =>
+						b2_msg_chk <= le32_t( 5        *8 -1 downto 0)
+									& msgIn ( msgLength*8 -1 downto 0);
+					when 122 =>
+						b2_msg_chk <= le32_t( 6        *8 -1 downto 0)
+									& msgIn ( msgLength*8 -1 downto 0);
+					when 121 =>
+						b2_msg_chk <= le32_t( 7        *8 -1 downto 0)
+									& msgIn ( msgLength*8 -1 downto 0);
+					when others => NULL;
+					end case;
+
 					b2_new_chk	<= '1';
 					state <= INIT_END;
 
@@ -155,38 +206,47 @@ begin
 			elsif state = INIT and inValid = '1' and b2_rdy = '1' then
 
 				if in_byte_count < b2_msg_length -8 -128 then
-					-- more chunks to come
+					--more chunks to come
 					b2_msg_chk	<= msgIn;
 					b2_new_chk	<= '1';
 					in_byte_count <= in_byte_count + 128;
 
-				else -- last chunk of data
+				else --last chunk of data
 
-					if last_byte_idx < 120 then --no need for additional chunk
-
+					if last_byte_idx < 120 then
+						--no need for additional chunk
 						b2_msg_chk((last_byte_idx+8)*8 -1 downto 0)
 							 <= le32_t & msgIn(last_byte_idx*8 -1 downto 0);
+
 						b2_msg_chk(128*8 -1 downto (last_byte_idx+8)*8)
 							 <= (others => '0');
+
 						b2_new_chk  <= '1';
 						b2_last_chk <= '1';
 						state <= B2_WAIT_INIT;
 
-
-					else --additional chunk needed for concatenation of LE32(T)
+					elsif last_byte_idx = 128 then
+						--no room for LE32(T)
+						b2_msg_chk <= msgIn;
+						b2_new_chk <= '1';
+						state <= INIT_END;
+						
+					else
+						--some room for LE32(T) but not enough
 						b2_msg_chk
 							 <= le32_t( (128-last_byte_idx)*8 -1 downto 0)
 							  & msgIn(last_byte_idx*8 -1 downto 0);
 
+						b2_new_chk <= '1';
 						state <= INIT_END;
-					end if;
 
+					end if;
 				end if;
 --
 --------------------------------------------------------------------------------
 -- End of initial hashing
 
-			elsif state = INIT_END and b2_rdy = '1'then
+			elsif state = INIT_END and b2_rdy = '1' and b2_new_chk = '0' then
 
 				b2_msg_chk((last_byte_idx -120)*8 -1 downto 0)
 					<= le32_t(8*8 -1 downto (128-last_byte_idx)*8);
