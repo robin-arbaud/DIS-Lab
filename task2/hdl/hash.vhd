@@ -1,9 +1,24 @@
 --------------------------------------------------------------------------------
 -- Block to perform the variable-length hashing for Argon2.
 --
--- The
--- Never set the inValid flag if the newDataRdy flag is not already set. This
--- would result in loss of data, as there is no input buffer.
+-- The input is processed by chunks of 128 bytes. If the last chunk is not full
+-- (i.e. if the message length is not 0 mod 128), the bytes which are actually
+-- read are the last ones (xx downto 0).
+--
+-- Set the inValid flag to indicate the system that it should process the
+-- msgIn data. If the system is expecting a message longer than what it has
+-- already received, this will be treated as the next chunk of data. If the
+-- system is idle, this will trigger a new processing sequence.
+-- 
+-- The newDataRdy flag indicates that the system is ready to process a new
+-- chunk of data.
+--
+-- The newReqRdy flag indicates that the sytem is in idle state and ready for
+-- a new processing sequence.
+--
+-- If the Tag size is smaller than the maximum 1024 bytes, the relevant data
+-- are the last bytes of the hash output (tagSize*8 -1 downto 0).
+--
 -------------------------------------------------------------------------------
 --
 library IEEE;
@@ -100,7 +115,6 @@ begin
 					  '0'		when others;
 
 	newReqRdy <= '1' when state = IDLE else '0';
-
 --
 --------------------------------------------------------------------------------
 --
@@ -109,6 +123,7 @@ begin
 
 		if rst = '1' then
 			hash	<= (others => '0');
+			outValid<= '0';
 			v		<= (others => (others => '0'));
 
 			state	<= IDLE;
