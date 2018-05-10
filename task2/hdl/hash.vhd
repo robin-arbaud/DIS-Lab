@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------------
 -- Block to perform the variable-length hashing for Argon2.
-
+--
+-- The
 -- Never set the inValid flag if the newDataRdy flag is not already set. This
 -- would result in loss of data, as there is no input buffer.
 -------------------------------------------------------------------------------
@@ -135,6 +136,7 @@ begin
 				b2_msg_length <= 8 + msgLength;
 				iter_count <= 1;
 				outValid <= '0';
+				hash <= (others => '0');
 
 				if (msgLength mod 128) = 0 then
 					last_byte_idx <= 128;
