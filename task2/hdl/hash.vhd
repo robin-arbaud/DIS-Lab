@@ -250,6 +250,10 @@ begin
 
 				b2_msg_chk((last_byte_idx -120)*8 -1 downto 0)
 					<= le32_t(8*8 -1 downto (128-last_byte_idx)*8);
+
+				b2_msg_chk(128*8 -1 downto (last_byte_idx)*8)
+					<= (others => '0');
+
 				b2_new_chk  <= '1';
 				b2_last_chk <= '1';
 				state <= B2_WAIT_INIT;
@@ -272,39 +276,51 @@ begin
 --------------------------------------------------------------------------------
 -- Continue hashing to extend the output size
 
-			elsif state = CONT and b2_finish = '1' then
+			elsif state = CONT and b2_finish = '1' and b2_new_chk = '0' then
 
-				v(iter_count) <= b2_result;
+				if iter_count < r then
+					v(iter_count) <= b2_result;
 
-				b2_msg_chk(128*8 -1 downto 64*8) <= (others => '0');
-				b2_msg_chk( 64*8 -1 downto    0) <= b2_result;
-				b2_new_chk	<= '1';
-				b2_last_chk	<= '1';
-				b2_msg_length <= 64;
+					b2_msg_chk(128*8 -1 downto 64*8) <= (others => '0');
+					b2_msg_chk( 64*8 -1 downto    0) <= b2_result;
+					b2_new_chk	<= '1';
+					b2_last_chk	<= '1';
+					b2_msg_length <= 64;
 
-				iter_count <= iter_count +1;
+					iter_count <= iter_count +1;
 
-				if iter_count >= r then
+				else
 					state <= CONT_END;
 				end if;
 --
 --------------------------------------------------------------------------------
 -- Concatenate hashes into final output
 
-			elsif state = CONT_END and b2_finish = '1' then
+			elsif state = CONT_END and b2_finish = '1' and b2_new_chk = '0' then
 
-				v(iter_count) <= b2_result;
+				if iter_count = r then
+					v(iter_count) <= b2_result;
 
-				-- V_(r+1)
-				hash((t-32*r)*8 -1 downto 0) <= b2_result((t-32*r)*8 -1 downto 0);
-				-- V_r to V_1
-				for k in r downto 1 loop
-					hash((t-32*(k-1))*8 -1 downto (t-32*k)*8) <= v(k)(64*8 -1 downto 32*8);
-				end loop;
+					b2_msg_chk(128*8 -1 downto 64*8) <= (others => '0');
+					b2_msg_chk( 64*8 -1 downto    0) <= b2_result;
+					b2_new_chk	<= '1';
+					b2_last_chk	<= '1';
+					b2_msg_length <= 64;
 
-				outValid <= '1';
+					iter_count <= iter_count +1;
 
-				state <= IDLE;
+				else
+					-- V_(r+1)
+					hash((t-32*r)*8 -1 downto 0) <= b2_result((t-32*r)*8 -1 downto 0);
+					-- V_r to V_1
+					for k in r downto 1 loop
+						hash((t-32*(k-1))*8 -1 downto (t-32*k)*8) <= v(k)(64*8 -1 downto 32*8);
+					end loop;
+
+					outValid <= '1';
+					state <= IDLE;
+
+				end if;
 			end if;
 
 		end if;

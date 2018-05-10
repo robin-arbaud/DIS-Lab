@@ -67,7 +67,7 @@ begin
 	test: process
 	begin
 		rst			<= '1';
-		tag_size	<= 32;
+		tag_size	<= 150;
 		msg_in		<= (others => '0');
 		in_valid	<= '0';
 		msg_length	<= 1;
@@ -78,8 +78,8 @@ begin
 --
 -------------------------------------------------------------------------------
 -- Test case 1 : short message
-	--msg_length	<= 50;
-	--in_valid	<= '1';
+	--msg_length <= 50;
+	--in_valid <= '1';
 
 	--wait for CLK_PERIOD;
 	--in_valid	<= '0';
@@ -90,8 +90,8 @@ begin
 --
 -------------------------------------------------------------------------------
 -- Test case 2 : short message with end of initialization
-	--msg_length	<= 127;
-	--in_valid	<= '1';
+	--msg_length <= 127;
+	--in_valid <= '1';
 
 	--wait for CLK_PERIOD;
 	--in_valid	<= '0';
