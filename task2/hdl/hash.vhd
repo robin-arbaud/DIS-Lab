@@ -95,6 +95,11 @@ architecture behav of hash is
 	type Vmem is array (1 to 31) of std_logic_vector(64*8 -1 downto 0);
 	signal v : Vmem;
 
+
+	-- internal flags
+	signal new_data_rdy	: std_logic := '0';
+	signal new_req_rdy	: std_logic := '0';
+
 	signal DEBUG_STATE : integer range 1 to 6;
 
 begin
@@ -110,11 +115,13 @@ begin
 	r <= integer( ceil( real(t)/real(32) )) -2 when t > 64 else 0;
 
 	with state select
-		newDataRdy <= '1'		when IDLE,
-					  b2_rdy	when INIT,
-					  '0'		when others;
+		new_data_rdy <= '1'		when IDLE,
+						b2_rdy	when INIT,
+						'0'		when others;
+	newDataRdy <= new_data_rdy and (not rst);
 
-	newReqRdy <= '1' when state = IDLE else '0';
+	new_req_rdy <= '1' when state = IDLE else '0';
+	newReqRdy	<= new_req_rdy and (not rst);
 --
 --------------------------------------------------------------------------------
 --
@@ -122,17 +129,21 @@ begin
 	begin
 
 		if rst = '1' then
-			hash	<= (others => '0');
-			outValid<= '0';
-			v		<= (others => (others => '0'));
+			state		<= IDLE;
 
-			state	<= IDLE;
+			hash		<= (others => '0');
+			outValid	<= '0';
+
+			v			<= (others => (others => '0'));
+
 			in_byte_count	<= 1;
 			last_byte_idx	<= 1;
 			iter_count		<= 1;
+
 			b2_msg_chk		<= (others => '0');
 			b2_new_chk		<= '0';
 			b2_last_chk		<= '0';
+			b2_msg_length	<= 0;
 
 
 		elsif rising_edge(clk) then
@@ -140,7 +151,6 @@ begin
 			--default values
 			b2_new_chk	<= '0';
 			b2_last_chk	<= '0';
-
 --
 --------------------------------------------------------------------------------
 -- Initialization
@@ -152,6 +162,7 @@ begin
 				iter_count <= 1;
 				outValid <= '0';
 				hash <= (others => '0');
+				v <= (others => (others => '0'));
 
 				if (msgLength mod 128) = 0 then
 					last_byte_idx <= 128;

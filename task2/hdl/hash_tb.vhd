@@ -78,57 +78,62 @@ begin
 --
 -------------------------------------------------------------------------------
 -- Test case 1 : short message
-	--msg_length <= 50;
-	--in_valid <= '1';
+	msg_length <= 50;
+	in_valid <= '1';
 
-	--wait for CLK_PERIOD;
-	--in_valid	<= '0';
+	wait for CLK_PERIOD;
+	in_valid	<= '0';
 
-	--wait until out_valid = '1';
-	--wait until clk'event and clk = '1';
-	--wait for CLK_PERIOD;
+	wait until out_valid = '1';
+	wait until clk'event and clk = '1';
+	wait for CLK_PERIOD;
 --
 -------------------------------------------------------------------------------
 -- Test case 2 : short message with end of initialization
-	--msg_length <= 127;
-	--in_valid <= '1';
+	msg_length <= 127;
+	in_valid <= '1';
 
-	--wait for CLK_PERIOD;
-	--in_valid	<= '0';
+	wait for CLK_PERIOD;
+	in_valid	<= '0';
 
-	--wait until out_valid = '1';
-	--wait until clk'event and clk = '1';
-	--wait for CLK_PERIOD;
+	wait until out_valid = '1';
+	wait until clk'event and clk = '1';
+	wait for CLK_PERIOD;
 --
 -------------------------------------------------------------------------------
 -- Test case 3 : longer message withtout end of initialization
-	--msg_length <= 321;
-	--in_valid <= '1';
+	msg_length <= 321;
+	in_valid <= '1';
 
-	--wait for CLK_PERIOD;
-	--in_valid <= '0';
+	wait for CLK_PERIOD;
+	in_valid <= '0';
 
-	--wait until new_data_rdy = '1';
-	--wait until clk'event and clk = '1';
-	--wait for CLK_PERIOD;
+	wait until new_data_rdy = '1';
+	wait until clk'event and clk = '1';
+	wait for CLK_PERIOD;
 
-	--in_valid <= '1';
+	in_valid <= '1';
 
-	--wait for CLK_PERIOD;
-	--in_valid <= '0';
+	wait for CLK_PERIOD;
+	in_valid <= '0';
 
-	--wait until new_data_rdy = '1';
-	--wait until clk'event and clk = '1';
-	--wait for CLK_PERIOD;
+	wait until new_data_rdy = '1';
+	wait until clk'event and clk = '1';
+	wait for CLK_PERIOD;
 
-	--in_valid <= '1';
+	in_valid <= '1';
 
-	--wait for CLK_PERIOD;
-	--in_valid <= '0';
+	wait for CLK_PERIOD;
+	in_valid <= '0';
+
+	-- reset test
+	rst <= '1';
+	wait for CLK_PERIOD;
+	rst <= '0';
 
 	--wait until out_valid = '1';
 	--wait until clk'event and clk = '1';
-	--wait for CLK_PERIOD;
+	wait for 10*CLK_PERIOD;
 --
 -------------------------------------------------------------------------------
 -- Test case 4 : longer message with end of initialization
@@ -158,6 +163,7 @@ begin
 
 	wait until out_valid = '1';
 	wait until clk'event and clk = '1';
+
 
 
 		assert false report "Simulation Finished" severity failure;
