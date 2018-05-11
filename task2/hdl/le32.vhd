@@ -27,6 +27,12 @@ begin
 
 	int_vector <= std_logic_vector( to_unsigned (input, 32) );
 
-	output <= int_vector & int_vector;
+	process(int_vector)
+	begin
+		for k in 8 downto 1 loop
+			output(k*8 -1 downto (k-1)*8) <= int_vector((9-k)*4 -1 downto (8-k)*4)
+										   & int_vector((9-k)*4 -1 downto (8-k)*4);
+		end loop;
+	end process;
 
 end behav;

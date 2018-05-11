@@ -126,13 +126,8 @@ begin
 	wait for CLK_PERIOD;
 	in_valid <= '0';
 
-	-- reset test
-	rst <= '1';
-	wait for CLK_PERIOD;
-	rst <= '0';
-
-	--wait until out_valid = '1';
-	--wait until clk'event and clk = '1';
+	wait until out_valid = '1';
+	wait until clk'event and clk = '1';
 	wait for 10*CLK_PERIOD;
 --
 -------------------------------------------------------------------------------
