@@ -16,11 +16,11 @@ architecture behav of hash_tb is
 			clk			: in  std_logic;
 			rst			: in  std_logic;
 			tagSize		: in  integer range 1 to 1024;
-			msgIn		: in  std_logic_vector( 128*8 -1 downto 0);
+			msgIn		: in  std_logic_vector(128*8 -1 downto 0);
 			inValid		: in  std_logic;
 			msgLength	: in  integer range 1 to 1024; --in bytes
 
-			hash		: out std_logic_vector(1024*8 -1 downto 0);
+			hash		: out std_logic_vector( 64*8 -1 downto 0);
 			outValid	: out std_logic;
 			newDataRdy	: out std_logic;
 			newReqRdy	: out std_logic
@@ -32,8 +32,8 @@ architecture behav of hash_tb is
 	constant CLK_PERIOD : time := 10 ns;
 
 	signal clk, rst, in_valid, out_valid, new_data_rdy, new_req_rdy : std_logic;
-	signal msg_in		: std_logic_vector( 128*8 -1 downto 0);
-	signal hash			: std_logic_vector(1024*8 -1 downto 0);
+	signal msg_in		: std_logic_vector(128*8 -1 downto 0);
+	signal hash			: std_logic_vector( 64*8 -1 downto 0);
 	signal tag_size		: integer range 1 to 1024;
 	signal msg_length	: integer range 1 to 1024;
 --
@@ -67,7 +67,7 @@ begin
 	test: process
 	begin
 		rst			<= '1';
-		tag_size	<= 150;
+		tag_size	<= 128;
 		msg_in		<= (others => '0');
 		in_valid	<= '0';
 		msg_length	<= 1;
@@ -84,7 +84,7 @@ begin
 	wait for CLK_PERIOD;
 	in_valid	<= '0';
 
-	wait until out_valid = '1';
+	wait until new_req_rdy = '1';
 	wait until clk'event and clk = '1';
 	wait for CLK_PERIOD;
 --
@@ -96,7 +96,7 @@ begin
 	wait for CLK_PERIOD;
 	in_valid	<= '0';
 
-	wait until out_valid = '1';
+	wait until new_req_rdy = '1';
 	wait until clk'event and clk = '1';
 	wait for CLK_PERIOD;
 --
@@ -126,7 +126,7 @@ begin
 	wait for CLK_PERIOD;
 	in_valid <= '0';
 
-	wait until out_valid = '1';
+	wait until new_req_rdy = '1';
 	wait until clk'event and clk = '1';
 	wait for 10*CLK_PERIOD;
 --
@@ -156,7 +156,7 @@ begin
 	wait for CLK_PERIOD;
 	in_valid <= '0';
 
-	wait until out_valid = '1';
+	wait until new_req_rdy = '1';
 	wait until clk'event and clk = '1';
 
 
