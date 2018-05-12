@@ -72,7 +72,7 @@ begin
 					if dataIn(8*k -1 downto 8*(k-1)) = "00000000" then
 						-- NULL character detected
 						finish	<= '1';
-					elsif byte_count = MAX_LENGTH then
+					elsif byte_count + (CHUNK_SIZE -k +1) >= MAX_LENGTH +1 then
 						finish	<= '1';
 						tooLong	<= '1';
 					else

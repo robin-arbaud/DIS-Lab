@@ -34,7 +34,7 @@ architecture behav of length_tb is
 	
 	constant CLK_PERIOD : time		:= 10 ns;
 	constant CHUNK_SIZE	: integer	:= 4;
-	constant MAX_LENGTH	: integer	:= 256;
+	constant MAX_LENGTH	: integer	:= 10;
 
 	signal clk, data_new, data_end, pending, finish, too_long : std_logic;
 	signal data_in : std_logic_vector ( CHUNK_SIZE*8 -1 downto 0);
@@ -118,6 +118,7 @@ begin
 
 		wait for CLK_PERIOD;
 		data_new <= '0';
+		data_end <= '0';
 
 		assert length = 10 report "2 - Wrong length" severity error;
 		assert finish = '1' report "2 - finish flag" severity error;
