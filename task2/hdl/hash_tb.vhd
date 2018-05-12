@@ -67,7 +67,7 @@ begin
 	test: process
 	begin
 		rst			<= '1';
-		tag_size	<= 128;
+		tag_size	<= 135;
 		msg_in		<= (others => '0');
 		in_valid	<= '0';
 		msg_length	<= 1;
