@@ -28,8 +28,8 @@ use IEEE.NUMERIC_STD.all;
 entity length is
 
 	generic(
-		CHUNK_SIZE	: integer; --in Bytes
-		MAX_LENGTH	: integer  --in Bytes
+		CHUNK_SIZE	: integer := 16; --in Bytes
+		MAX_LENGTH	: integer := 1024 --in Bytes
 	);
 
 	port(
