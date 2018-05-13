@@ -32,12 +32,12 @@ begin
 		for k in 8 downto 1 loop
 			if k mod 2 = 0 then
 				output(k*8 -1 downto (k-1)*8)
-									  <= int_vector( (10-k)*4 -1 downto (9-k)*4)
-									   & int_vector( (10-k)*4 -1 downto (9-k)*4);
+									 <= int_vector( (10-k)*4 -1 downto (9-k)*4)
+									  & int_vector( (10-k)*4 -1 downto (9-k)*4);
 			else
 				output(k*8 -1 downto (k-1)*8)
-									  <= int_vector( (8-k)*4 -1 downto (7-k)*4)
-									   & int_vector( (8-k)*4 -1 downto (7-k)*4);
+									 <= int_vector( (8-k)*4 -1 downto (7-k)*4)
+									  & int_vector( (8-k)*4 -1 downto (7-k)*4);
 			end if;
 		end loop;
 	end process;
